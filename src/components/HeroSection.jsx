@@ -1,380 +1,455 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Heart,
-  Share,
-  X,
+  Share2,
   ChevronLeft,
   ChevronRight,
+  X,
   Star,
-  MapPin,
-  Grid,
+  LayoutGrid,
 } from "lucide-react";
 
-/* ---------------------------------------------------------
-   GALLERY — Airbnb-style hero section with photo tour
---------------------------------------------------------- */
-function Gallery({
-  title,
-  location,
-  rating,
-  reviewCount,
-  superhost,
-  images,
-  price,
-}) {
-  const [saved, setSaved] = useState(false);
-  const [isPhotoTourOpen, setIsPhotoTourOpen] = useState(false);
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const lightboxRef = useRef(null);
+/* ─────────────────────────────────────────────────────────
+   Photo labels shown in the Photo Tour
+───────────────────────────────────────────────────────── */
+const PHOTO_LABELS = [
+  "Living area",
+  "Bedroom · 1 king bed",
+  "Outdoor · Pool & jacuzzi",
+  "Bedroom · Interior",
+  "Balcony & garden view",
+];
 
-  const openPhotoTour = () => {
-    setIsPhotoTourOpen(true);
-  };
-
-  const closePhotoTour = () => {
-    setIsPhotoTourOpen(false);
-  };
-
-  const openLightbox = (index) => {
-    setCurrentImageIndex(index);
-    setIsLightboxOpen(true);
-  };
-
-  const closeLightbox = () => {
-    setIsLightboxOpen(false);
-  };
-
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-  };
-
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-  };
-
-  // Keyboard navigation for lightbox
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (isLightboxOpen) {
-        if (e.key === "ArrowRight") {
-          e.preventDefault();
-          nextImage();
-        }
-        if (e.key === "ArrowLeft") {
-          e.preventDefault();
-          prevImage();
-        }
-        if (e.key === "Escape") {
-          closeLightbox();
-        }
-      }
-      if (isPhotoTourOpen && e.key === "Escape") {
-        closePhotoTour();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isLightboxOpen, isPhotoTourOpen, currentImageIndex]);
-
-  // Lock body scroll when overlays are open
-  useEffect(() => {
-    if (isPhotoTourOpen || isLightboxOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, [isPhotoTourOpen, isLightboxOpen]);
-
-  // Share functionality
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: title,
-          text: `Check out this amazing place on Airbnb!`,
-          url: window.location.href,
-        });
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          console.error("Error sharing:", error);
-        }
-      }
-    } else {
-      // Fallback - copy to clipboard
-      try {
-        await navigator.clipboard.writeText(window.location.href);
-        // Show toast notification (you can implement this)
-        console.log("Link copied to clipboard!");
-      } catch (error) {
-        console.error("Error copying to clipboard:", error);
-      }
-    }
-  };
+/* ─────────────────────────────────────────────────────────
+   SHARE / SAVE button pair (reused in overlays)
+───────────────────────────────────────────────────────── */
+function ShareSave({ saved, onSave, dark = false }) {
+  const cls = dark
+    ? "flex items-center gap-1.5 text-sm font-medium underline text-white hover:text-gray-200 transition-colors"
+    : "flex items-center gap-1.5 text-sm font-medium underline text-gray-800 hover:text-gray-600 transition-colors";
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
-      {/* Title row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white">
-            {title}
-          </h1>
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 fill-[#FF385C] text-[#FF385C]" />
-              <span className="font-medium text-gray-900 dark:text-white">
-                {rating}
-              </span>
-              <span className="text-gray-600 dark:text-gray-400">
-                ({reviewCount} reviews)
-              </span>
-            </div>
-            <span className="text-gray-300 dark:text-gray-600">•</span>
-            <span className="text-gray-600 dark:text-gray-400 underline decoration-gray-300 hover:decoration-gray-600 cursor-pointer">
-              {superhost && "Superhost"}
-            </span>
-            <span className="text-gray-300 dark:text-gray-600">•</span>
-            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-              <MapPin className="w-4 h-4" />
-              <span>{location}</span>
-            </div>
-          </div>
-        </div>
+    <div className="flex items-center gap-4">
+      <button className={cls}>
+        <Share2 size={16} />
+        Share
+      </button>
+      <button onClick={onSave} className={cls}>
+        <Heart
+          size={16}
+          className={saved ? "fill-[#FF385C] text-[#FF385C]" : ""}
+        />
+        {saved ? "Saved" : "Save"}
+      </button>
+    </div>
+  );
+}
 
-        <div className="flex items-center gap-4 shrink-0">
+/* ─────────────────────────────────────────────────────────
+   LIGHTBOX  — single photo, full-screen black overlay
+───────────────────────────────────────────────────────── */
+function Lightbox({ images, initialIndex, onClose, saved, onSave }) {
+  const [index, setIndex] = useState(initialIndex);
+  const [fade, setFade] = useState(true);
+
+  const go = useCallback(
+    (dir) => {
+      setFade(false);
+      setTimeout(() => {
+        setIndex((i) => (i + dir + images.length) % images.length);
+        setFade(true);
+      }, 120);
+    },
+    [images.length],
+  );
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "ArrowRight") go(1);
+      else if (e.key === "ArrowLeft") go(-1);
+      else if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [go, onClose]);
+
+  // Lock scroll
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  return (
+    <div
+      className="fixed inset-0 z-200 bg-black flex flex-col"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Photo lightbox"
+    >
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-6 py-4 shrink-0">
+        <span className="text-white text-sm font-medium">
+          {index + 1} / {images.length}
+        </span>
+        <div className="flex items-center gap-6">
+          <ShareSave saved={saved} onSave={onSave} dark />
           <button
-            onClick={handleShare}
-            className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF385C] focus:ring-offset-2 rounded-lg px-2 py-1"
-            aria-label="Share this property"
-          >
-            <Share size={16} />
-            <span className="hidden sm:inline">Share</span>
-          </button>
-          <button
-            onClick={() => setSaved((s) => !s)}
-            className={`flex items-center gap-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF385C] focus:ring-offset-2 rounded-lg px-2 py-1 ${
-              saved
-                ? "text-[#FF385C]"
-                : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-            }`}
-            aria-label={saved ? "Remove from saved" : "Save this property"}
-          >
-            <Heart
-              size={16}
-              className={`transition-all duration-300 ${
-                saved ? "fill-[#FF385C] text-[#FF385C] scale-110" : ""
-              }`}
-            />
-            <span className="hidden sm:inline">{saved ? "Saved" : "Save"}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Image grid */}
-      <div className="relative grid grid-cols-4 grid-rows-2 gap-2 rounded-xl sm:rounded-2xl overflow-hidden h-[280px] sm:h-[360px] md:h-[420px] bg-gray-100">
-        {/* Main large image */}
-        <div className="col-span-2 row-span-2 relative group cursor-pointer overflow-hidden">
-          <img
-            src={images[0] || "/api/placeholder/1200/800"}
-            alt={`${title} - Main view`}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            loading="eager"
-          />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-          <button
-            onClick={() => openLightbox(0)}
-            className="absolute inset-0 w-full h-full"
-            aria-label="View main photo in lightbox"
-          />
-        </div>
-
-        {/* Top right image */}
-        <div className="relative group cursor-pointer overflow-hidden">
-          <img
-            src={images[1] || "/api/placeholder/800/600"}
-            alt={`${title} - View 2`}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-          <button
-            onClick={() => openLightbox(1)}
-            className="absolute inset-0 w-full h-full"
-            aria-label="View photo 2 in lightbox"
-          />
-        </div>
-
-        {/* Bottom right - image 3 */}
-        <div className="relative group cursor-pointer overflow-hidden">
-          <img
-            src={images[2] || "/api/placeholder/800/600"}
-            alt={`${title} - View 3`}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-          <button
-            onClick={() => openLightbox(2)}
-            className="absolute inset-0 w-full h-full"
-            aria-label="View photo 3 in lightbox"
-          />
-        </div>
-
-        {/* Bottom right - image 4 with "Show all photos" button */}
-        <div className="relative group cursor-pointer overflow-hidden">
-          <img
-            src={images[3] || "/api/placeholder/800/600"}
-            alt={`${title} - View 4`}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-
-          {/* Gradient overlay for "Show all photos" button */}
-          <div className="absolute inset-0 bg-gradient-to- from-black/50 via-transparent to-transparent" />
-
-          <button
-            onClick={openPhotoTour}
-            className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-white text-gray-800 dark:text-white text-xs sm:text-sm font-medium px-2 sm:px-3 py-1.5 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-1.5 border border-gray-200 dark:border-gray-700 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#FF385C] focus:ring-offset-2"
-            aria-label="Show all photos"
-          >
-            <Grid size={14} />
-            <span className="hidden xs:inline">Show all photos</span>
-            <span className="xs:hidden">All</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Photo Tour Overlay */}
-      {isPhotoTourOpen && (
-        <div
-          className="fixed inset-0 bg-white z-50 overflow-y-auto animate-slideUp"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Photo tour"
-        >
-          <div className="sticky top-0 bg-white border-b border-gray-200 dark:border-gray-700 z-10 px-4 py-3 flex items-center justify-between">
-            <button
-              onClick={closePhotoTour}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF385C]"
-              aria-label="Close photo tour"
-            >
-              <X size={24} />
-            </button>
-            <h2 className="text-lg font-semibold dark:text-white">
-              All photos
-            </h2>
-            <div className="w-10" /> {/* Spacer for alignment */}
-          </div>
-
-          <div className="max-w-7xl mx-auto px-4 py-6">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {images.map((img, idx) => (
-                <div
-                  key={idx}
-                  className="relative aspect-square cursor-pointer rounded-lg overflow-hidden group hover:shadow-lg transition-shadow"
-                  onClick={() => {
-                    closePhotoTour();
-                    setTimeout(() => openLightbox(idx), 100);
-                  }}
-                >
-                  <img
-                    src={img || "/api/placeholder/800/600"}
-                    alt={`${title} - Photo ${idx + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
-                  <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
-                    {idx + 1}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Lightbox Overlay */}
-      {isLightboxOpen && (
-        <div
-          className="fixed inset-0 bg-black z-[60] flex items-center justify-center"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Photo viewer"
-          ref={lightboxRef}
-        >
-          {/* Close button */}
-          <button
-            onClick={closeLightbox}
-            className="absolute top-4 right-4 text-white hover:bg-white/10 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white z-10"
+            onClick={onClose}
+            className="text-white hover:text-gray-300 transition-colors p-1"
             aria-label="Close lightbox"
           >
-            <X size={28} />
+            <X size={22} />
           </button>
+        </div>
+      </div>
 
-          {/* Counter */}
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-white text-sm bg-black/50 px-4 py-1.5 rounded-full">
-            {currentImageIndex + 1} / {images.length}
-          </div>
+      {/* Image area */}
+      <div className="flex-1 relative flex items-center justify-center min-h-0">
+        {/* Prev */}
+        <button
+          onClick={() => go(-1)}
+          className="absolute left-4 z-10 bg-white/10 hover:bg-white/20 text-white rounded-full p-3 transition-all hover:scale-105 active:scale-95 focus:outline-none"
+          aria-label="Previous photo"
+        >
+          <ChevronLeft size={24} />
+        </button>
 
-          {/* Previous button */}
+        {/* Image */}
+        <img
+          key={index}
+          src={images[index]}
+          alt={`Photo ${index + 1}`}
+          className="max-h-full max-w-full object-contain select-none"
+          style={{
+            opacity: fade ? 1 : 0,
+            transition: "opacity 0.12s ease",
+          }}
+          draggable={false}
+        />
+
+        {/* Next */}
+        <button
+          onClick={() => go(1)}
+          className="absolute right-4 z-10 bg-white/10 hover:bg-white/20 text-white rounded-full p-3 transition-all hover:scale-105 active:scale-95 focus:outline-none"
+          aria-label="Next photo"
+        >
+          <ChevronRight size={24} />
+        </button>
+      </div>
+
+      {/* Caption */}
+      <div className="shrink-0 text-center text-gray-400 text-sm pb-5 pt-3">
+        {PHOTO_LABELS[index] ?? `Photo ${index + 1}`}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────
+   PHOTO TOUR  — two-column gallery with left labels and right image column
+───────────────────────────────────────────────────────── */
+function PhotoTour({
+  images,
+  title,
+  rating,
+  reviewCount,
+  location,
+  saved,
+  onSave,
+  onClose,
+  onOpenLightbox,
+  initialIndex = 0,
+}) {
+  // Lock scroll on underlying page
+  const containerRef = useRef(null);
+  const itemRefs = useRef([]);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  // Scroll to the initially requested image when the tour opens
+  useEffect(() => {
+    if (initialIndex && itemRefs.current[initialIndex]) {
+      // small timeout so sticky header is applied
+      setTimeout(() => {
+        itemRefs.current[initialIndex].scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 120);
+    }
+  }, [initialIndex]);
+
+  return (
+    <div
+      className="fixed inset-0 z-100 bg-white flex flex-col"
+      role="dialog"
+      aria-modal="true"
+      aria-label="All photos"
+    >
+      {/* Sticky header with thumbnails */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-3 shrink-0">
+        <div className="flex items-center justify-between">
           <button
-            onClick={prevImage}
-            className="absolute left-2 sm:left-4 text-white hover:bg-white/10 p-3 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white"
-            aria-label="Previous image"
+            onClick={onClose}
+            className="flex items-center gap-2 text-sm font-medium text-gray-800 hover:bg-gray-100 rounded-full px-3 py-2 transition-colors"
+            aria-label="Close photo tour"
           >
-            <ChevronLeft size={32} />
+            <X size={18} />
+            <span>Close</span>
           </button>
+          <ShareSave saved={saved} onSave={onSave} />
+        </div>
 
-          {/* Image */}
-          <div className="relative w-full max-w-6xl max-h-[90vh] mx-4">
-            <img
-              src={images[currentImageIndex] || "/api/placeholder/1200/800"}
-              alt={`${title} - Photo ${currentImageIndex + 1}`}
-              className="w-full h-full object-contain max-h-[85vh] animate-imageFadeIn"
-            />
-          </div>
-
-          {/* Next button */}
-          <button
-            onClick={nextImage}
-            className="absolute right-2 sm:right-4 text-white hover:bg-white/10 p-3 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white"
-            aria-label="Next image"
-          >
-            <ChevronRight size={32} />
-          </button>
-
-          {/* Thumbnail navigation at bottom */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 overflow-x-auto max-w-[80%] px-4 py-2">
-            {images.map((img, idx) => (
+        {/* Thumbnails strip */}
+        <div className="mt-3 overflow-x-auto">
+          <div className="flex gap-3 items-start">
+            {images.map((src, i) => (
               <button
-                key={idx}
-                onClick={() => setCurrentImageIndex(idx)}
-                className={`relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0 transition-all duration-200 ${
-                  idx === currentImageIndex
-                    ? "ring-2 ring-white scale-110"
-                    : "opacity-60 hover:opacity-100"
-                }`}
-                aria-label={`Go to photo ${idx + 1}`}
+                key={i}
+                onClick={() =>
+                  itemRefs.current[i] &&
+                  itemRefs.current[i].scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  })
+                }
+                className="flex-shrink-0"
+                aria-label={`Jump to photo ${i + 1}`}
               >
                 <img
-                  src={img || "/api/placeholder/100/100"}
-                  alt={`Thumbnail ${idx + 1}`}
-                  className="w-full h-full object-cover"
+                  src={src}
+                  alt={PHOTO_LABELS[i] ?? `Photo ${i + 1}`}
+                  className="w-24 h-16 object-cover rounded-lg border border-gray-200"
+                  loading={i < 5 ? "eager" : "lazy"}
                 />
+                <div className="text-xs text-gray-600 mt-1 text-center">
+                  {PHOTO_LABELS[i] ?? `Photo ${i + 1}`}
+                </div>
               </button>
             ))}
           </div>
         </div>
-      )}
-    </section>
+      </div>
+
+      {/* Main content: two columns — left labels, right images */}
+      <div ref={containerRef} className="flex-1 overflow-y-auto">
+        <div className="max-w-[1120px] mx-auto px-6 py-8">
+          {/* Listing meta */}
+          <div className="mb-6">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-1">
+              {title}
+            </h2>
+            <div className="flex items-center gap-2 text-sm text-gray-600 flex-wrap">
+              <Star size={12} className="fill-[#FF385C] text-[#FF385C]" />
+              <span className="font-medium text-gray-900">{rating}</span>
+              <span>·</span>
+              <span className="underline">{reviewCount} reviews</span>
+              <span>·</span>
+              <span className="underline">{location}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-[260px_1fr] gap-8">
+            {/* Empty header column for spacing on the first row */}
+            <div className="hidden md:block" />
+            <div />
+
+            {images.map((src, i) => (
+              <React.Fragment key={i}>
+                <div ref={(el) => (itemRefs.current[i] = el)} className="py-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {PHOTO_LABELS[i] ?? `Photo ${i + 1}`}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-2">
+                    {i === 0
+                      ? "Sofa · Air conditioning · Ceiling fan · TV"
+                      : ""}
+                  </p>
+                </div>
+
+                <div className="py-4">
+                  <button
+                    onClick={() => onOpenLightbox(i)}
+                    className="w-full block overflow-hidden rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF385C] focus:ring-offset-2 group"
+                    aria-label={`Open photo ${i + 1} in lightbox`}
+                  >
+                    <img
+                      src={src}
+                      alt={PHOTO_LABELS[i] ?? `Photo ${i + 1}`}
+                      className="w-full object-cover rounded-xl"
+                      style={{ aspectRatio: "4/3" }}
+                      loading={i < 2 ? "eager" : "lazy"}
+                    />
+                  </button>
+                </div>
+              </React.Fragment>
+            ))}
+          </div>
+
+          <div className="pb-12" />
+        </div>
+      </div>
+    </div>
   );
 }
 
-export default Gallery;
+/* ─────────────────────────────────────────────────────────
+   GALLERY  — the 5-photo hero grid on the listing page
+───────────────────────────────────────────────────────── */
+export default function Gallery({ title, images }) {
+  const [saved, setSaved] = useState(false);
+  const [photoTourOpen, setPhotoTourOpen] = useState(false);
+  const [tourInitialIndex, setTourInitialIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  // Open photo tour (used as the improved 'lightbox' from the hero)
+  const openPhotoTourAt = useCallback((i) => {
+    setTourInitialIndex(i ?? 0);
+    setPhotoTourOpen(true);
+  }, []);
+
+  // legacy single-photo lightbox kept for other flows
+  const openLightbox = useCallback((i) => {
+    setLightboxIndex(i);
+    setLightboxOpen(true);
+  }, []);
+
+  const closeLightbox = useCallback(() => {
+    setLightboxOpen(false);
+  }, []);
+
+  const openPhotoTour = useCallback(() => {
+    setPhotoTourOpen(true);
+  }, []);
+
+  const closePhotoTour = useCallback(() => {
+    setPhotoTourOpen(false);
+  }, []);
+
+  // Open lightbox from within photo tour
+  const openLightboxFromTour = useCallback((i) => {
+    setLightboxIndex(i);
+    setLightboxOpen(true);
+    // keep photo tour mounted so closing lightbox returns to tour
+  }, []);
+
+  return (
+    <>
+      <section className="max-w-[1120px] mx-auto px-6 sm:px-10 pt-6 pb-6">
+        {/* Title only */}
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <h1 className="text-[26px] font-semibold text-gray-900 leading-tight">
+            {title}
+          </h1>
+          <ShareSave saved={saved} onSave={() => setSaved((s) => !s)} />
+        </div>
+
+        {/* 5-photo grid */}
+        <div className="relative grid grid-cols-4 grid-rows-2 gap-2 h-[420px] rounded-2xl overflow-hidden">
+          {/* Main large photo */}
+          <button
+            onClick={() => openPhotoTourAt(0)}
+            className="col-span-2 row-span-2 relative overflow-hidden focus:outline-none group"
+            aria-label="View photo 1"
+          >
+            <img
+              src={images[0]}
+              alt={`${title} – photo 1`}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+              loading="eager"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/[0.08] transition-colors duration-300" />
+          </button>
+
+          {/* Top-right photos */}
+          {[1, 2, 3].map((i) => (
+            <button
+              key={i}
+              onClick={() => openPhotoTourAt(i)}
+              className="relative overflow-hidden focus:outline-none group"
+              aria-label={`View photo ${i + 1}`}
+            >
+              <img
+                src={images[i]}
+                alt={`${title} – photo ${i + 1}`}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/[0.08] transition-colors duration-300" />
+            </button>
+          ))}
+
+          {/* Bottom-right photo + "Show all photos" button */}
+          <button
+            onClick={() => openPhotoTourAt(4)}
+            className="relative overflow-hidden focus:outline-none group"
+            aria-label={`View photo 5`}
+          >
+            <img
+              src={images[4]}
+              alt={`${title} – photo 5`}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/[0.08] transition-colors duration-300" />
+          </button>
+
+          {/* "Show all photos" pill — bottom-right corner */}
+          <button
+            onClick={openPhotoTour}
+            className="absolute bottom-4 right-4 flex items-center gap-2 bg-white text-gray-800 text-sm font-semibold px-4 py-2.5 rounded-xl border border-gray-300 hover:bg-gray-50 hover:shadow-md transition-all duration-150 active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-gray-800 z-10"
+            aria-label="Show all photos"
+          >
+            <LayoutGrid size={16} strokeWidth={2} />
+            Show all photos
+          </button>
+        </div>
+      </section>
+
+      {/* Photo Tour overlay — always in DOM when open, hidden behind Lightbox */}
+      {photoTourOpen && (
+        <div style={{ display: lightboxOpen ? "none" : "block" }}>
+          <PhotoTour
+            images={images}
+            title={title}
+            rating={rating}
+            reviewCount={reviewCount}
+            location={location}
+            saved={saved}
+            onSave={() => setSaved((s) => !s)}
+            onClose={closePhotoTour}
+            onOpenLightbox={openLightboxFromTour}
+            initialIndex={tourInitialIndex}
+          />
+        </div>
+      )}
+
+      {/* Lightbox overlay */}
+      {lightboxOpen && (
+        <Lightbox
+          images={images}
+          initialIndex={lightboxIndex}
+          onClose={closeLightbox}
+          saved={saved}
+          onSave={() => setSaved((s) => !s)}
+        />
+      )}
+    </>
+  );
+}

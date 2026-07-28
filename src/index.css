@@ -67,7 +67,3 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
-/* xs breakpoint for very small screens */
-@custom-media --xs (min-width: 480px);
-

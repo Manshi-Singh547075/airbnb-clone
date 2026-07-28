@@ -7,11 +7,11 @@ import AmenitiesInfo from "./components/AmenitiesInfo";
 
 export default function AirbnbListingPage() {
   const images = [
-    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
-    "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=800&q=80",
-    "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800&q=80",
-    "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800&q=80",
-    "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?w=800&q=80",
+    "src/assets/hero1.jpeg",
+    "src/assets/hero2.jpeg",
+    "src/assets/hero3.jpeg",
+    "src/assets/hero4.jpeg",
+    "src/assets/hero5.jpeg",
   ];
 
   const listing = {
@@ -32,6 +32,47 @@ export default function AirbnbListingPage() {
     checkOut: "10/23/2026",
     guestsSelected: 2,
     cancelDate: "17 October",
+    description:
+      "Welcome to our romantic Jacuzzi 1BHK at Mirashya UG10 in Candolim — a tranquil retreat nestled in the heart of Goa. The apartment features a private jacuzzi, a fully equipped kitchen, plush king-size bed, and a breezy balcony where you can soak in the Goan vibe.\n\nPerfect for couples or solo travellers seeking a serene escape. The space is thoughtfully designed with premium furnishings, mood lighting, and everything you need for a relaxing stay. Steps away from Candolim beach, local restaurants, and the vibrant Goa nightlife.",
+    sleepingArrangements: [
+      {
+        room: "Bedroom",
+        bedType: "1 king bed",
+        image:
+          "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=400&q=80",
+      },
+    ],
+    houseRules: [
+      "Check-in: After 2:00 PM",
+      "Checkout: 11:00 AM",
+      "No smoking",
+      "No pets",
+      "No parties or events",
+      "Maximum 3 guests",
+    ],
+    safetyItems: [
+      "Carbon monoxide alarm",
+      "Smoke alarm",
+      "Security camera/recording device",
+    ],
+    cancellationPolicy:
+      "Free cancellation before 17 October. Cancel before check-in on 18 October for a partial refund.",
+    amenities: [
+      "WiFi",
+      "Kitchen",
+      "TV",
+      "Air conditioning",
+      "Washer",
+      "Dryer",
+      "Heating",
+      "Pool",
+      "Parking",
+      "Security",
+      "Sound system",
+      "Coffee maker",
+      "Iron",
+      "Hair dryer",
+    ],
   };
 
   return (
