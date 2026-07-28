@@ -12,6 +12,7 @@ import {
   MessageCircle,
   HelpCircle,
 } from "lucide-react";
+import nav from "../assets/nav-img.png";
 
 /* ---------------------------------------------------------
    HEADER — Airbnb-style top nav with full interactions
@@ -103,7 +104,7 @@ function Header() {
   aria-label="Search any destination"
 >
   <img
-    src="src/assets/nav-img.png" // or your image path
+    src={nav} // or your image path
     alt=""
     className="w-12 h-12 object-contain"
   />
