@@ -197,62 +197,70 @@ function PhotoTour({
       aria-modal="true"
       aria-label="All photos"
     >
-      {/* Sticky header with thumbnails */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-3 shrink-0">
-        <div className="flex items-center justify-between">
-            <button
-              onClick={onClose}
-              className="flex items-center gap-2 text-sm font-medium text-gray-800 hover:bg-gray-100 rounded-full px-3 py-2 transition-colors"
-              aria-label="Close photo tour"
-            >
-            <ChevronLeft size={18} />
-            
-            </button>
-            <ShareSave saved={saved} onSave={onSave} />
-      </div>
+      {/* Sticky header with Photo Tour heading */}
+      <div className="sticky top-0 z-10 bg-white px-10 py-5 shrink-0">
+  <div className="grid grid-cols-3 items-center">
+    
+    {/* Left */}
+    <div className="flex justify-start">
+      <button
+        onClick={onClose}
+        className="flex items-center gap-2 text-sm font-medium text-gray-800 hover:bg-gray-100 rounded-full px-3 py-2 transition-colors"
+        aria-label="Close photo tour"
+      >
+        <ChevronLeft size={20} />
+      </button>
+    </div>
 
-        {/* Thumbnails strip */}
-        <div className="mt-3 overflow-x-auto">
-          <div className="flex gap-3 items-start">
+    {/* Center */}
+    <h2 className="text-xl font-semibold text-gray-800 text-center">
+      Photo Tour
+    </h2>
+
+    {/* Right */}
+    <div className="flex justify-end">
+      <ShareSave saved={saved} onSave={onSave} />
+    </div>
+
+  </div>
+</div>
+
+      {/* Main content: thumbnails strip + two columns — left labels, right images */}
+      <div ref={containerRef} className="flex-1 overflow-y-auto">
+        <div className="max-w-[1280px] mx-auto px-6 py-8">
+          {/* Thumbnails strip */}
+          <div className="mb-8 px-16 py-2">
+            <div className="flex flex-wrap gap-4 items-start justify-center">
               {images.map((src, i) => (
                 <button
                   key={i}
                   onClick={() =>
                     itemRefs.current[i] &&
-                  itemRefs.current[i].scrollIntoView({
-                    behavior: "smooth",
-                    block: "center",
-                  })
+                    itemRefs.current[i].scrollIntoView({
+                      behavior: "smooth",
+                      block: "center",
+                    })
                   }
-                  className="flex-shrink-0 group"
+                  className="group"
                   aria-label={`Jump to photo ${i + 1}`}
                 >
                   <img
                     src={src}
                     alt={PHOTO_LABELS[i] ?? `Photo ${i + 1}`}
-                    className="w-28 h-20 object-cover rounded-lg border border-gray-200 transition-transform duration-300 group-hover:scale-105"
+                    className="w-30 h-30 object-cover rounded-lg border border-gray-200 transition-transform duration-300 group-hover:scale-105"
                     loading={i < 6 ? "eager" : "lazy"}
                   />
-                <div className="text-xs text-gray-600 mt-1 text-center">
-                  {PHOTO_LABELS[i] ?? `Photo ${i + 1}`}
-                </div>
+                  <div className="mt-1.5 text-center text-sm font-medium text-gray-600">
+                    {PHOTO_LABELS[i] ?? `Photo ${i + 1}`}
+                  </div>
                 </button>
               ))}
             </div>
           </div>
-              </div>
-
-      {/* Main content: two columns — left labels, right images */}
-      <div ref={containerRef} className="flex-1 overflow-y-auto">
-        <div className="max-w-[1120px] mx-auto px-6 py-8">
           {/* Listing meta — title only */}
-          <div className="mb-6">
-            {/* <h2 className="text-2xl font-semibold text-gray-900 mb-1">
-              {title}
-            </h2> */}
-            </div>
 
-          <div className="grid grid-cols-[260px_1fr] gap-8">
+           <div className="max-w-6xl mx-auto px-8">
+            <div className="grid grid-cols-[340px_560px] gap-16 my-20">
               {/* Empty header column for spacing on the first row */}
               <div className="hidden md:block" />
               <div />
@@ -260,10 +268,10 @@ function PhotoTour({
               {images.map((src, i) => (
                 <React.Fragment key={i}>
                 <div ref={(el) => (itemRefs.current[i] = el)} className="py-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-4xl font-semibold text-gray-900">
                     {PHOTO_LABELS[i] ?? `Photo ${i + 1}`}
                   </h3>
-                  <p className="text-sm text-gray-600 mt-2">
+                  <p className="text-base text-gray-600 mt-2">
                     {i === 0
                       ? "Sofa · Air conditioning · Ceiling fan · TV"
                       : ""}
@@ -280,7 +288,7 @@ function PhotoTour({
                         src={src}
                         alt={PHOTO_LABELS[i] ?? `Photo ${i + 1}`}
                       className="w-full object-cover rounded-xl"
-                      style={{ aspectRatio: "4/3" }}
+                      style={{ aspectRatio: "16/10" }}
                         loading={i < 2 ? "eager" : "lazy"}
                       />
                     </button>
@@ -288,6 +296,8 @@ function PhotoTour({
                 </React.Fragment>
               ))}
           </div>
+          
+            </div >
 
           <div className="pb-12" />
         </div>
