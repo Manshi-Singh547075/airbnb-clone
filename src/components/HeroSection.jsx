@@ -13,7 +13,7 @@ import bedroom from "../assets/bedroom.jpeg";
 import fullKitchen from "../assets/Full kitchen.jpeg";
 import fullBathroom from "../assets/Full bathroom.jpeg"; 
 import gym from "../assets/Gym.jpeg";
-import pool from "../assets/Pool.jpeg";
+import pool from "../assets/pool.jpeg";
 import hero5 from "../assets/hero5.jpeg";
 
 
