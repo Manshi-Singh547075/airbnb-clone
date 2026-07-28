@@ -200,47 +200,47 @@ function PhotoTour({
       {/* Sticky header with thumbnails */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-3 shrink-0">
         <div className="flex items-center justify-between">
-          <button
-            onClick={onClose}
-            className="flex items-center gap-2 text-sm font-medium text-gray-800 hover:bg-gray-100 rounded-full px-3 py-2 transition-colors"
-            aria-label="Close photo tour"
-          >
+            <button
+              onClick={onClose}
+              className="flex items-center gap-2 text-sm font-medium text-gray-800 hover:bg-gray-100 rounded-full px-3 py-2 transition-colors"
+              aria-label="Close photo tour"
+            >
             <ChevronLeft size={18} />
             
-          </button>
-          <ShareSave saved={saved} onSave={onSave} />
-        </div>
+            </button>
+            <ShareSave saved={saved} onSave={onSave} />
+      </div>
 
         {/* Thumbnails strip */}
         <div className="mt-3 overflow-x-auto">
           <div className="flex gap-3 items-start">
-            {images.map((src, i) => (
-              <button
-                key={i}
-                onClick={() =>
-                  itemRefs.current[i] &&
+              {images.map((src, i) => (
+                <button
+                  key={i}
+                  onClick={() =>
+                    itemRefs.current[i] &&
                   itemRefs.current[i].scrollIntoView({
                     behavior: "smooth",
                     block: "center",
                   })
-                }
-                className="flex-shrink-0"
-                aria-label={`Jump to photo ${i + 1}`}
-              >
-                <img
-                  src={src}
-                  alt={PHOTO_LABELS[i] ?? `Photo ${i + 1}`}
-                  className="w-24 h-16 object-cover rounded-lg border border-gray-200"
-                  loading={i < 5 ? "eager" : "lazy"}
-                />
+                  }
+                  className="flex-shrink-0 group"
+                  aria-label={`Jump to photo ${i + 1}`}
+                >
+                  <img
+                    src={src}
+                    alt={PHOTO_LABELS[i] ?? `Photo ${i + 1}`}
+                    className="w-28 h-20 object-cover rounded-lg border border-gray-200 transition-transform duration-300 group-hover:scale-105"
+                    loading={i < 6 ? "eager" : "lazy"}
+                  />
                 <div className="text-xs text-gray-600 mt-1 text-center">
                   {PHOTO_LABELS[i] ?? `Photo ${i + 1}`}
                 </div>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      </div>
+              </div>
 
       {/* Main content: two columns — left labels, right images */}
       <div ref={containerRef} className="flex-1 overflow-y-auto">
@@ -250,15 +250,15 @@ function PhotoTour({
             {/* <h2 className="text-2xl font-semibold text-gray-900 mb-1">
               {title}
             </h2> */}
-          </div>
+            </div>
 
           <div className="grid grid-cols-[260px_1fr] gap-8">
-            {/* Empty header column for spacing on the first row */}
-            <div className="hidden md:block" />
-            <div />
+              {/* Empty header column for spacing on the first row */}
+              <div className="hidden md:block" />
+              <div />
 
-            {images.map((src, i) => (
-              <React.Fragment key={i}>
+              {images.map((src, i) => (
+                <React.Fragment key={i}>
                 <div ref={(el) => (itemRefs.current[i] = el)} className="py-4">
                   <h3 className="text-lg font-semibold text-gray-900">
                     {PHOTO_LABELS[i] ?? `Photo ${i + 1}`}
@@ -268,25 +268,25 @@ function PhotoTour({
                       ? "Sofa · Air conditioning · Ceiling fan · TV"
                       : ""}
                   </p>
-                </div>
+                  </div>
 
                 <div className="py-4">
-                  <button
-                    onClick={() => onOpenLightbox(i)}
-                    className="w-full block overflow-hidden rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF385C] focus:ring-offset-2 group"
-                    aria-label={`Open photo ${i + 1} in lightbox`}
-                  >
-                    <img
-                      src={src}
-                      alt={PHOTO_LABELS[i] ?? `Photo ${i + 1}`}
+                    <button
+                      onClick={() => onOpenLightbox(i)}
+                      className="w-full block overflow-hidden rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#FF385C] focus:ring-offset-2 group"
+                      aria-label={`Open photo ${i + 1} in lightbox`}
+                    >
+                      <img
+                        src={src}
+                        alt={PHOTO_LABELS[i] ?? `Photo ${i + 1}`}
                       className="w-full object-cover rounded-xl"
                       style={{ aspectRatio: "4/3" }}
-                      loading={i < 2 ? "eager" : "lazy"}
-                    />
-                  </button>
-                </div>
-              </React.Fragment>
-            ))}
+                        loading={i < 2 ? "eager" : "lazy"}
+                      />
+                    </button>
+                  </div>
+                </React.Fragment>
+              ))}
           </div>
 
           <div className="pb-12" />
@@ -299,12 +299,23 @@ function PhotoTour({
 /* ─────────────────────────────────────────────────────────
    GALLERY  — the 5-photo hero grid on the listing page
 ───────────────────────────────────────────────────────── */
-export default function Gallery({ title, images }) {
+export default function Gallery({ title, images, location, rating, reviewCount, superhost }) {
   const [saved, setSaved] = useState(false);
   const [photoTourOpen, setPhotoTourOpen] = useState(false);
   const [tourInitialIndex, setTourInitialIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  // Build the set of images used in the PhotoTour (append additional assets)
+  const tourImages = React.useMemo(() => (
+    [
+      ...images,
+      "src/assets/Gym.jpeg",
+      "src/assets/bedroom.jpeg",
+      "src/assets/Full kitchen.jpeg",
+      "src/assets/Full bathroom.jpeg",
+    ]
+  ), [images]);
 
   // Open photo tour (used as the improved 'lightbox' from the hero)
   const openPhotoTourAt = useCallback((i) => {
@@ -408,8 +419,11 @@ export default function Gallery({ title, images }) {
       {photoTourOpen && (
         <div style={{ display: lightboxOpen ? "none" : "block" }}>
           <PhotoTour
-            images={images}
+            images={tourImages}
             title={title}
+            rating={rating}
+            reviewCount={reviewCount}
+            location={location}
             saved={saved}
             onSave={() => setSaved((s) => !s)}
             onClose={closePhotoTour}
@@ -422,7 +436,7 @@ export default function Gallery({ title, images }) {
       {/* Lightbox overlay */}
       {lightboxOpen && (
         <Lightbox
-          images={images}
+          images={tourImages}
           initialIndex={lightboxIndex}
           onClose={closeLightbox}
           saved={saved}
