@@ -81,11 +81,6 @@ export default function AirbnbListingPage() {
       <Gallery
         title="Romantic Jacuzzi 1BHK Candolim | Mirashya UG10"
         images={images}
-        location="Candolim, India"
-        rating={listing.rating}
-        reviewCount={listing.reviews}
-        superhost={true}
-        price={listing.price}
       />
       <AmenitiesInfo listing={listing} />
     </div>

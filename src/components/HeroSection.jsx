@@ -5,7 +5,6 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Star,
   LayoutGrid,
 } from "lucide-react";
 
@@ -153,9 +152,6 @@ function Lightbox({ images, initialIndex, onClose, saved, onSave }) {
 function PhotoTour({
   images,
   title,
-  rating,
-  reviewCount,
-  location,
   saved,
   onSave,
   onClose,
@@ -209,8 +205,8 @@ function PhotoTour({
             className="flex items-center gap-2 text-sm font-medium text-gray-800 hover:bg-gray-100 rounded-full px-3 py-2 transition-colors"
             aria-label="Close photo tour"
           >
-            <X size={18} />
-            <span>Close</span>
+            <ChevronLeft size={18} />
+            
           </button>
           <ShareSave saved={saved} onSave={onSave} />
         </div>
@@ -249,19 +245,11 @@ function PhotoTour({
       {/* Main content: two columns — left labels, right images */}
       <div ref={containerRef} className="flex-1 overflow-y-auto">
         <div className="max-w-[1120px] mx-auto px-6 py-8">
-          {/* Listing meta */}
+          {/* Listing meta — title only */}
           <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-1">
+            {/* <h2 className="text-2xl font-semibold text-gray-900 mb-1">
               {title}
-            </h2>
-            <div className="flex items-center gap-2 text-sm text-gray-600 flex-wrap">
-              <Star size={12} className="fill-[#FF385C] text-[#FF385C]" />
-              <span className="font-medium text-gray-900">{rating}</span>
-              <span>·</span>
-              <span className="underline">{reviewCount} reviews</span>
-              <span>·</span>
-              <span className="underline">{location}</span>
-            </div>
+            </h2> */}
           </div>
 
           <div className="grid grid-cols-[260px_1fr] gap-8">
@@ -311,7 +299,7 @@ function PhotoTour({
 /* ─────────────────────────────────────────────────────────
    GALLERY  — the 5-photo hero grid on the listing page
 ───────────────────────────────────────────────────────── */
-export default function Gallery({ title, images, location, rating, reviewCount, superhost }) {
+export default function Gallery({ title, images }) {
   const [saved, setSaved] = useState(false);
   const [photoTourOpen, setPhotoTourOpen] = useState(false);
   const [tourInitialIndex, setTourInitialIndex] = useState(0);
@@ -322,12 +310,6 @@ export default function Gallery({ title, images, location, rating, reviewCount, 
   const openPhotoTourAt = useCallback((i) => {
     setTourInitialIndex(i ?? 0);
     setPhotoTourOpen(true);
-  }, []);
-
-  // legacy single-photo lightbox kept for other flows
-  const openLightbox = useCallback((i) => {
-    setLightboxIndex(i);
-    setLightboxOpen(true);
   }, []);
 
   const closeLightbox = useCallback(() => {
@@ -428,9 +410,6 @@ export default function Gallery({ title, images, location, rating, reviewCount, 
           <PhotoTour
             images={images}
             title={title}
-            rating={rating}
-            reviewCount={reviewCount}
-            location={location}
             saved={saved}
             onSave={() => setSaved((s) => !s)}
             onClose={closePhotoTour}
@@ -453,3 +432,4 @@ export default function Gallery({ title, images, location, rating, reviewCount, 
     </>
   );
 }
+
