@@ -3,15 +3,20 @@ import React, { useState, useEffect } from "react";
 import Header from "./components/Header";
 import Gallery from "./components/HeroSection";
 import AmenitiesInfo from "./components/AmenitiesInfo";
+import h1 from "./assets/hero1.jpeg";
+import h2 from "./assets/hero2.jpeg";
+import h3 from "./assets/hero3.jpeg";
+import h4 from "./assets/hero4.jpeg";
+import h5 from "./assets/hero5.jpeg";
 // import "./global.css";
 
 export default function AirbnbListingPage() {
   const images = [
-    "src/assets/hero1.jpeg",
-    "src/assets/hero2.jpeg",
-    "src/assets/hero3.jpeg",
-    "src/assets/hero4.jpeg",
-    "src/assets/hero5.jpeg",
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
   ];
 
   const listing = {

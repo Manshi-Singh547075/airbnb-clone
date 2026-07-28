@@ -7,6 +7,15 @@ import {
   X,
   LayoutGrid,
 } from "lucide-react";
+import room1 from "../assets/Living room 1.jpeg";
+import room2 from "../assets/Living room 2.jpeg";
+import bedroom from "../assets/bedroom.jpeg"; 
+import fullKitchen from "../assets/Full kitchen.jpeg";
+import fullBathroom from "../assets/Full bathroom.jpeg"; 
+import gym from "../assets/Gym.jpeg";
+import pool from "../assets/Pool.jpeg";
+import hero5 from "../assets/hero5.jpeg";
+
 
 /* ─────────────────────────────────────────────────────────
    Photo labels shown in the Photo Tour
@@ -227,9 +236,9 @@ function PhotoTour({
 
       {/* Main content: thumbnails strip + two columns — left labels, right images */}
       <div ref={containerRef} className="flex-1 overflow-y-auto">
-        <div className="max-w-[1280px] mx-auto px-6 py-8">
+        <div className="max-w-[1280px] mx-auto px-6 ">
           {/* Thumbnails strip */}
-          <div className="mb-8 px-16 py-2">
+          <div className="mb-8 px-16 ">
             <div className="flex flex-wrap gap-4 items-start justify-center">
               {images.map((src, i) => (
                 <button
@@ -260,7 +269,7 @@ function PhotoTour({
           {/* Listing meta — title only */}
 
            <div className="max-w-6xl mx-auto px-8">
-            <div className="grid grid-cols-[340px_560px] gap-16 my-20">
+            <div className="grid grid-cols-[340px_560px] gap-16 my-2">
               {/* Empty header column for spacing on the first row */}
               <div className="hidden md:block" />
               <div />
@@ -296,10 +305,10 @@ function PhotoTour({
                 </React.Fragment>
               ))}
           </div>
-          
+
             </div >
 
-          <div className="pb-12" />
+          <div className="pb-2" />
         </div>
       </div>
     </div>
@@ -320,10 +329,14 @@ export default function Gallery({ title, images, location, rating, reviewCount, 
   const tourImages = React.useMemo(() => (
     [
       ...images,
-      "src/assets/Gym.jpeg",
-      "src/assets/bedroom.jpeg",
-      "src/assets/Full kitchen.jpeg",
-      "src/assets/Full bathroom.jpeg",
+      room1,
+      room2,
+      bedroom,
+      fullKitchen,
+      fullBathroom,
+      gym,
+      pool,
+      hero5,
     ]
   ), [images]);
 
