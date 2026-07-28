@@ -311,7 +311,7 @@ function PhotoTour({
 /* ─────────────────────────────────────────────────────────
    GALLERY  — the 5-photo hero grid on the listing page
 ───────────────────────────────────────────────────────── */
-export default function Gallery({ title, images }) {
+export default function Gallery({ title, images, location, rating, reviewCount, superhost }) {
   const [saved, setSaved] = useState(false);
   const [photoTourOpen, setPhotoTourOpen] = useState(false);
   const [tourInitialIndex, setTourInitialIndex] = useState(0);
